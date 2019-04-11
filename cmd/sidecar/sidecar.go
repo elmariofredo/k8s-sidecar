@@ -43,9 +43,16 @@ import (
 	// _ "k8s.io/client-go/plugin/pkg/client/auth/openstack"
 )
 
+//Version from build
 var Version string
+
+//Commit from build
 var Commit string
+
+//Branch from build
 var Branch string
+
+//BuildDate from build
 var BuildDate string
 
 var (
