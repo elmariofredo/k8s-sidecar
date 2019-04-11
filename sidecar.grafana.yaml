@@ -1,0 +1,21 @@
+Selectors:
+  - "configmap/grafana_dashboard"
+CheckJSON: true
+#CheckYaml: true
+#CheckCommand: ./bin/amtool check-config /tmp/alertmanager.yaml
+# CheckCommandOKExitCode:
+#  - 0
+#  - 127
+TmpDirectory: /tmp/
+#Template:
+ToDirectory: tmp/grafana/{{.namespace}}/
+#ToFileName: alertmanager.yaml
+
+
+#RemoveComment: true
+#RemoveEmptyLines: true
+FromNamespace: ALL
+
+#ToNamespace: monitoring
+#ToSecretName: test-secrets
+#ToConfigMapName: test-configmap
