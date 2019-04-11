@@ -38,4 +38,4 @@ debug: build-image
 	docker run -p 2112:2112/tcp --network host -v "/tmp/config:/config" --rm --name $(APP_NAME) $(IMAGE):$(VERSION) -debug
 
 debug_bash: build-image
-	docker run -it -p 2112:2112/tcp -e SNMP_SERVER=localhost --network host --rm --entrypoint "/bin/bash" --name $(APP_NAME) $(IMAGE):$(VERSION) 
+	docker run -it -p 2112:2112/tcp --network host --rm --entrypoint "/bin/bash" --name $(APP_NAME) $(IMAGE):$(VERSION) 
