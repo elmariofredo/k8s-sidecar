@@ -21,7 +21,7 @@ func checkConfig(filePath string) {
 			log.Info("New Config found stop sidecar")
 			os.Exit(0)
 		}
-		//time.Sleep(5 * time.Minute)
-		time.Sleep(5 * time.Second)
+		time.Sleep(5 * time.Minute)
+		//time.Sleep(5 * time.Second)
 	}
 }

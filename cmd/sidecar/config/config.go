@@ -107,7 +107,7 @@ func (c *Config) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		return fmt.Errorf("missing ToFileName")
 	}
 
-	if (c.ToSecretName != "" || c.ToConfigMapName == "") && c.ToNamespace == "" {
+	if (c.ToSecretName != "" || c.ToConfigMapName != "") && c.ToNamespace == "" {
 		return fmt.Errorf("missing ToNamespace")
 	}
 
