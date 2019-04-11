@@ -26,9 +26,7 @@ build: clean dep
 	GOOS=$(ARCH) GOARCH=amd64 CGO_ENABLED=0 go build $(LDFLAGS) -a -installsuffix cgo -o bin/$(APP_NAME) ./cmd/$(APP_NAME)
 	GOOS=$(ARCH) GOARCH=amd64 CGO_ENABLED=0 go build $(LDFLAGS) -a -installsuffix cgo -o bin/$(APP_NAME_TOOL) ./cmd/$(APP_NAME_TOOL)
 
-docker: build build-sidecar-image 
-
-build-image: build
+docker: build
 	docker build . -t $(IMAGE):$(VERSION)
 
 
