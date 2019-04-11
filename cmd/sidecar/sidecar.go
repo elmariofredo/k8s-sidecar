@@ -190,7 +190,7 @@ func main() {
 						deleteFile(finDir + ent.name)
 					} else {
 						createDir(finDir)
-						fmt.Printf("cmid: '%s' name: '%s' len: %d ", cmid, ent.name, len(ent.data))
+						log.Debugf("cmid: '%s' name: '%s' len: %d ", cmid, ent.name, len(ent.data))
 						if validData(*conf, eMap, cmid, ent.data) {
 							writeToFile(finDir+ent.name, ent.data)
 						}
