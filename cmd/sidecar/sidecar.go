@@ -23,10 +23,11 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"sidecar/cmd/sidecar/config"
-	"sidecar/cmd/sidecar/template"
 	"strings"
 	"time"
+
+	"github.com/sysincz/k8s-sidecar/cmd/sidecar/config"
+	"github.com/sysincz/k8s-sidecar/cmd/sidecar/template"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	logrus "github.com/sirupsen/logrus"
