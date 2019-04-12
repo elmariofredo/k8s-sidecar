@@ -1,0 +1,100 @@
+# Grafana configuration:
+#   - go to Grafana web, configure prometheus source: http://prometheus-service.monitoring.svc.cluster.local
+#   (see https://prometheus.io/docs/visualization/grafana/)
+
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  labels:
+    k8s-app: grafana
+  name: grafana
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: grafana
+  template:
+    metadata:
+      labels:
+        k8s-app: grafana
+    spec:
+      serviceAccountName: grafana
+      securityContext:
+        fsGroup: 472
+        runAsUser: 472
+      containers:
+      - name: grafana-sc-dashboard
+        image: "sysincz/sidecar:v0.2"
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 2112
+          name: metrics
+        volumeMounts:
+          - name: sc-dashboard-volume
+            mountPath: "/tmp/dashboards" 
+          - name: config-volume
+            mountPath: /config
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 50m
+            memory: 64Mi
+      - name: grafana
+        image: "grafana/grafana:5.3.2"
+        env:
+        - name: GF_SERVER_ROOT_URL
+          value: "http://grafana.example.com/"
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: grafana
+              key: password
+        - name: GF_INSTALL_PLUGINS
+          value: ""
+        volumeMounts:
+            - name: config
+              mountPath: "/etc/grafana/grafana.ini"
+              subPath: grafana.ini
+            - name: config
+              mountPath: "/etc/grafana/provisioning/datasources/datasources.yaml"
+              subPath: datasources.yaml
+            - name: sc-dashboard-volume
+              mountPath: "/tmp/dashboards"
+            - name: sc-dashboard-provider
+              mountPath: "/etc/grafana/provisioning/dashboards/sc-dashboardproviders.yaml"
+              subPath: provider.yaml
+            - name: grafana-data
+              mountPath: "/var/lib/grafana"
+        ports:
+        - name: service
+          containerPort: 80
+          protocol: TCP
+        - containerPort: 3000
+          name: http
+        resources:
+          limits:
+            cpu: 200m
+            memory: 200Mi
+          requests:
+            cpu: 100m
+            memory: 100Mi
+      volumes:
+      - name: config
+        configMap:
+          name: grafana
+      - name: sc-dashboard-volume
+        emptyDir: {}
+      - name: sc-dashboard-provider
+        configMap:
+          name: grafana-config-dashboards
+      - name: grafana-data
+        emptyDir: {}
+      - name: config-volume
+        configMap:
+          name: grafana-sidecar-config
+
+
+

@@ -1,0 +1,39 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: msteams-sidecar-config
+  namespace: monitoring
+data:
+  sidecar.yaml: |
+    CheckYaml: true
+    CheckSelfConfig: True
+    Template: | 
+      {{range $index, $element := . }}
+      {{if index . "connectors.yaml.part0.head"}}
+      #{{$index}}
+      {{index . "connectors.yaml.part0.head"}}
+      {{ end }}
+      {{end }}
+      {{range $index, $element := .}}
+      {{- if .team_connectors }}
+        #{{$index}}
+        {{.team_connectors}}
+      {{ end }}
+      {{ end }}
+    ToDirectory: /etc/config/
+    TmpDirectory: /tmp/
+    ToFileName: connectors.yaml
+    Selectors:
+      - "configmap/prometheus-msteams=main"
+      - "configmap/prometheus-msteams"
+    #RemoveComment: true
+    RemoveEmptyLines: true
+    FromNamespace: ALL
+
+    #ToNamespace: monitoring
+    #ToSecretName: test-secrets
+    #ToConfigMapName: test-configmap
+    URLRealoads:
+    - http://localhost:2000/reload
+    PrometheusMetricsURL: /metrics

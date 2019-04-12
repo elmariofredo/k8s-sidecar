@@ -1,0 +1,36 @@
+CheckYaml: true
+#CheckCommand: /home/milect/alertmanager-0.16.1.linux-amd64/amtool check-config tmp/connectors.yaml
+CheckSelfConfig: True
+Template: | 
+  {{range $index, $element := . }}
+  {{if index . "connectors.yaml.part0.head"}}
+  #{{$index}}
+  {{index . "connectors.yaml.part0.head"}}
+  {{ end }}
+  {{end }}
+  {{range $index, $element := .}}
+  {{- if .team_connectors }}
+    #{{$index}}
+    {{.team_connectors}}
+  {{ end }}
+  {{ end }}
+ToDirectory: tmp/connector_output/
+TmpDirectory: /tmp/
+ToFileName: connectors.yaml
+Selectors:
+  - "configmap/prometheus-msteams=main"
+  - "configmap/prometheus-msteams"
+
+RemoveComment: true
+RemoveEmptyLines: true
+FromNamespace: ALL
+
+ToNamespace: monitoring
+ToSecretName: test-secrets
+ToConfigMapName: test-configmap
+URLRealoads:
+- http://localhost:2121/reloads
+- http://localhost:2112/reloads
+- http://localhost:2112/metrics
+
+PrometheusMetricsURL: /metrics

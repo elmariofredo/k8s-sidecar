@@ -1,0 +1,14 @@
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: alertmanager-sidecar-rolebind
+  namespace: monitoring
+roleRef:
+  kind: Role
+  name: alertmanager-sidecar-role
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+- kind: ServiceAccount
+  name: alertmanager-sidecar
+  namespace: monitoring

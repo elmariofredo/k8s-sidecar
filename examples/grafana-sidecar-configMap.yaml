@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-sidecar-config
+  namespace: monitoring
+data:
+  sidecar.yaml: |
+    CheckSelfConfig: True
+    Selectors:
+    - "configmap/grafana_dashboard"
+    CheckJSON: true
+    TmpDirectory: /tmp/
+    ToDirectory: /tmp/dashboards/
+    #ToDirectory: tmp/grafana/{{.namespace}}/
+    FromNamespace: ALL

@@ -1,0 +1,78 @@
+---
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: prometheus-msteams
+  namespace: "monitoring"
+  labels:
+    app: prometheus-msteams
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prometheus-msteams
+      release: prometheus-msteams
+  template:
+    metadata:
+      labels:
+        app: prometheus-msteams
+        release: prometheus-msteams
+    spec:
+      serviceAccountName: alertmanager-sidecar
+      volumes:
+        - name: config
+          emptyDir: {}
+        - name: config-volume
+          configMap:
+            name: msteams-sidecar-config
+      containers:
+        - name: prometheus-msteams
+          image: "sysincz/prometheus-msteams:v1.1"
+ #         imagePullPolicy: Always
+          env:
+          - name: HTTP_PROXY
+            value: "http://proxy.example.com:3128"
+          - name: HTTPS_PROXY
+            value: "http://proxy.example.cz:3128"
+          - name: http_proxy
+            value: "http://proxy.example.cz:3128"
+          - name: https_proxy
+            value: "http://proxy.example.cz:3128"
+          - name: NO_PROXY
+            value: localhost,127.0.0.1
+          - name: no_proxy
+            value: localhost,127.0.0.1
+          volumeMounts:
+            - name: config
+              mountPath: /etc/config
+          args:
+            - --config=/etc/config/connectors.yaml
+          ports:
+          - name: http
+            containerPort: 2000
+            protocol: TCP
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
+        - name: prometheus-msteams-sc
+          image: "sysincz/sidecar:v0.2"
+#          imagePullPolicy: IfNotPresent
+          ports:
+          - containerPort: 2112
+            name: metrics
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
+          volumeMounts:
+            - name: config
+              mountPath: "/etc/config/" 
+            - name: config-volume
+              mountPath: /config

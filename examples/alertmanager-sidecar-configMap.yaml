@@ -1,0 +1,78 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-sidecar-config
+  namespace: monitoring
+data:
+  sidecar.yaml: |
+    CheckSelfConfig: True
+    Selectors:
+    - "configmap/alertmanager-rules=global"
+    - "configmap/alertmanager-rules"
+    TmpDirectory: /tmp/
+    ToFileName: alertmanager.yaml
+    CheckCommand: /amtool check-config /tmp/alertmanager.yaml
+    #CheckYaml: true
+    # CheckCommandOKExitCode:
+    #  - 0
+    
+    Template: | 
+      {{range $index, $element := . }}
+      {{if index . "alertmanager.yaml.part0.00global"}}
+      #{{$index}} alertmanager.yaml.part0.00global
+      {{index . "alertmanager.yaml.part0.00global"}}
+      {{ end }}
+      {{end }}
+      {{range $index, $element := . }}
+      {{if index . "alertmanager.yaml.part1.00route-global"}}
+      #{{$index}} alertmanager.yaml.part1.00route-global
+      {{index . "alertmanager.yaml.part1.00route-global"}}
+      {{ end }}
+      {{end }}
+
+      {{range $index, $element := . }}
+      {{if index . "alertmanager.yaml.part1.99routes"}}
+      #{{$index}} alertmanager.yaml.part1.99routes
+      {{index . "alertmanager.yaml.part1.99routes"}}
+      {{ end }}
+      {{end }}
+      {{range $index, $element := . }}
+      {{if index . "alertmanager-route"}}
+      #{{$index}} alertmanager-route
+      {{index . "alertmanager-route"| indent 2}}
+      {{ end }}
+      {{end }}
+
+        {{range $index, $element := . }}
+      {{if index . "alertmanager.yaml.part2.00inhibit_rules-global"}}
+      #{{$index}} alertmanager.yaml.part2.00inhibit_rules-global
+      {{index . "alertmanager.yaml.part2.00inhibit_rules-global"}}
+      {{ end }}
+      {{end }}
+
+
+      {{range $index, $element := . }}
+      {{if index . "alertmanager.yaml.part5.00receivers-global"}}
+      #{{$index}} alertmanager.yaml.part5.00receivers-global
+      {{index . "alertmanager.yaml.part5.00receivers-global"}}
+      {{ end }}
+      {{end }}
+
+      {{range $index, $element := . }}
+      {{if index . "alertmanager-receivers"}}
+      #{{$index}} alertmanager-receivers
+      {{index . "alertmanager-receivers"}}
+      {{ end }}
+      {{end }}
+
+
+    ToDirectory: /etc/config/
+    RemoveComment: true
+    RemoveEmptyLines: true
+    FromNamespace: ALL
+    ToNamespace: monitoring
+    ToSecretName: alertmanager-main
+    #ToConfigMapName: test-configmap
+
+

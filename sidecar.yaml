@@ -1,36 +1,59 @@
-CheckYaml: true
-#CheckCommand: /home/milect/alertmanager-0.16.1.linux-amd64/amtool check-config tmp/connectors.yaml
-CheckSelfConfig: True
-Template: | 
-  {{range $index, $element := . }}
-  {{if index . "connectors.yaml.part0.head"}}
-  #{{$index}}
-  {{index . "connectors.yaml.part0.head"}}
-  {{ end }}
-  {{end }}
-  {{range $index, $element := .}}
-  {{- if .team_connectors }}
-    #{{$index}}
-    {{.team_connectors}}
-  {{ end }}
-  {{ end }}
-ToDirectory: tmp/connector_output/
-TmpDirectory: /tmp/
-ToFileName: connectors.yaml
-Selectors:
-  - "configmap/prometheus-msteams=main"
-  - "configmap/prometheus-msteams"
+### Check syntax
+#CheckCommand: /amtool check-config /tmp/alertmanager.yaml
+#CheckJSON: true
+#CheckYaml: true
 
-RemoveComment: true
-RemoveEmptyLines: true
-FromNamespace: ALL
 
-ToNamespace: monitoring
-ToSecretName: test-secrets
-ToConfigMapName: test-configmap
-URLRealoads:
-- http://localhost:2121/reloads
-- http://localhost:2112/reloads
-- http://localhost:2112/metrics
+### Check this config for changes 
+### if changed exit from sidecar 
+#CheckSelfConfig: True
 
-PrometheusMetricsURL: /metrics
+
+### Selectors: 
+### - kind/labelSelector
+###
+# Selectors:
+# - "configmap/prometheus-msteams=main"
+# - "secret/prometheus-msteams=team"
+# - "configmap/prometheus-msteams"
+
+
+### Limit Namespace where to search 
+### ALL = --all-namespaces
+### 'name' = -n 'name'
+### '' = actual
+#FromNamespace: ALL
+
+### Go lang template https://golang.org/pkg/text/template/
+###
+###  print all : {{ printf "%#v" . }}
+#Template: |
+#  {{ printf "%#v" . }}
+
+### Change output
+###
+#RemoveComment: true
+#RemoveEmptyLines: true
+
+### Directory for check syntax
+#TmpDirectory: /tmp/
+### Filename for check syntax/configmap key/secret key
+#ToFileName: connectors.yaml
+###  Directory to save output
+###  can by use {{.namespace}} for name of directory by namespace
+#ToDirectory: tmp/grafana/{{.namespace}}/
+
+### Export to k8s configmap or secret (one file, must by sets Template)
+#ToNamespace: monitoring
+#ToConfigMapName: test-configmap
+#ToSecretName: test-secrets
+
+
+
+
+
+
+
+### Prometheus Monitoring Show golang metric + output for check syntax 
+#PrometheusMetricsURL: /metrics
+#PrometheusMetricsPort: 2112
