@@ -1,8 +1,14 @@
 package main
 
 import (
+	"fmt"
+	"io"
 	"io/ioutil"
+	"net"
+	"net/url"
 	"os"
+	"syscall"
+	"time"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -43,92 +49,133 @@ func getNamespace(ns string) string {
 }
 
 func watchConfigMap(clientset kubernetes.Clientset, namespace string, listOptions metav1.ListOptions, ev chan Event) {
-	//tmi test
-	watcher, err := clientset.CoreV1().ConfigMaps(namespace).Watch(listOptions)
-	if err != nil {
-		panic(err)
-	}
-
-	for event := range watcher.ResultChan() {
-
-		cm := event.Object.(*v1.ConfigMap)
-		cmid := cm.Namespace + "/" + cm.GetName()
-		log.Debug(cmid)
-		for key, val := range cm.Labels {
-			log.Debugf("   Labels: %s=%s", key, val)
+	for {
+		watcher, err := clientset.CoreV1().ConfigMaps(namespace).Watch(listOptions)
+		if err != nil {
+			switch err {
+			case io.EOF:
+				// watch closed normally
+			case io.ErrUnexpectedEOF:
+				log.Infof("Watch closed with unexpected EOF: %v", err)
+			default:
+				panic(fmt.Errorf("Failed to watch : %v", err))
+			}
+			// If this is "connection refused" error, it means that most likely apiserver is not responsive.
+			// It doesn't make sense to re-list all objects because most likely we will be able to restart
+			// watch where we ended.
+			// If that's the case wait and resend watch request.
+			if urlError, ok := err.(*url.Error); ok {
+				if opError, ok := urlError.Err.(*net.OpError); ok {
+					if errno, ok := opError.Err.(syscall.Errno); ok && errno == syscall.ECONNREFUSED {
+						time.Sleep(time.Second)
+						continue
+					}
+				}
+			}
 		}
-		e := Event{}
-		e.cmid = cmid
-		e.namespace = cm.Namespace
-		switch event.Type {
-		case watch.Deleted:
-			e.action = "deleted"
-		case watch.Added:
-			e.action = "added"
-		case watch.Modified:
-			e.action = "modified"
 
-		default:
-			panic("unexpected event type " + event.Type)
+		for event := range watcher.ResultChan() {
+
+			cm := event.Object.(*v1.ConfigMap)
+			cmid := cm.Namespace + "/" + cm.GetName()
+			log.Debug(cmid)
+			for key, val := range cm.Labels {
+				log.Debugf("   Labels: %s=%s", key, val)
+			}
+			e := Event{}
+			e.cmid = cmid
+			e.namespace = cm.Namespace
+			switch event.Type {
+			case watch.Deleted:
+				e.action = "deleted"
+			case watch.Added:
+				e.action = "added"
+			case watch.Modified:
+				e.action = "modified"
+
+			default:
+				panic("unexpected event type " + event.Type)
+			}
+			var output []Entry
+			for dataKey, dataValue := range cm.Data {
+				log.Debugf("      dataKey: %s", dataKey)
+				var ent Entry
+
+				ent.data = string(dataValue)
+				ent.name = dataKey
+				output = append(output, ent)
+
+			}
+			e.entry = output
+			ev <- e
+
 		}
-		var output []Entry
-		for dataKey, dataValue := range cm.Data {
-			log.Debugf("      dataKey: %s", dataKey)
-			var ent Entry
-
-			ent.data = string(dataValue)
-			ent.name = dataKey
-			output = append(output, ent)
-
-		}
-		e.entry = output
-		ev <- e
-
 	}
 }
 
 func watchSecret(clientset kubernetes.Clientset, namespace string, listOptions metav1.ListOptions, ev chan Event) {
-	watcher, err := clientset.CoreV1().Secrets(namespace).Watch(listOptions)
-	if err != nil {
-		panic(err)
-	}
-
-	for event := range watcher.ResultChan() {
-
-		cm := event.Object.(*v1.Secret)
-		cmid := cm.Namespace + "/" + cm.GetName()
-		log.Debug(cmid)
-		for key, val := range cm.Labels {
-			log.Debugf("   Labels: %s=%s", key, val)
-		}
-		e := Event{}
-		e.cmid = cmid
-		e.namespace = cm.Namespace
-		switch event.Type {
-		case watch.Deleted:
-			e.action = "deleted"
-		case watch.Added:
-			e.action = "added"
-		case watch.Modified:
-			e.action = "modified"
-
-		default:
-			panic("unexpected event type " + event.Type)
+	for {
+		watcher, err := clientset.CoreV1().Secrets(namespace).Watch(listOptions)
+		if err != nil {
+			switch err {
+			case io.EOF:
+				// watch closed normally
+			case io.ErrUnexpectedEOF:
+				log.Infof("Watch for %v closed with unexpected EOF: %v", err)
+			default:
+				panic(fmt.Errorf("Failed to watch : %v", err))
+			}
+			// If this is "connection refused" error, it means that most likely apiserver is not responsive.
+			// It doesn't make sense to re-list all objects because most likely we will be able to restart
+			// watch where we ended.
+			// If that's the case wait and resend watch request.
+			if urlError, ok := err.(*url.Error); ok {
+				if opError, ok := urlError.Err.(*net.OpError); ok {
+					if errno, ok := opError.Err.(syscall.Errno); ok && errno == syscall.ECONNREFUSED {
+						time.Sleep(time.Second)
+						continue
+					}
+				}
+			}
 		}
 
-		var output []Entry
-		for dataKey, dataValue := range cm.Data {
-			log.Debugf("      dataKey: %s", dataKey)
-			var ent Entry
+		for event := range watcher.ResultChan() {
 
-			ent.data = string(dataValue)
-			ent.name = dataKey
-			output = append(output, ent)
+			cm := event.Object.(*v1.Secret)
+			cmid := cm.Namespace + "/" + cm.GetName()
+			log.Debug(cmid)
+			for key, val := range cm.Labels {
+				log.Debugf("   Labels: %s=%s", key, val)
+			}
+			e := Event{}
+			e.cmid = cmid
+			e.namespace = cm.Namespace
+			switch event.Type {
+			case watch.Deleted:
+				e.action = "deleted"
+			case watch.Added:
+				e.action = "added"
+			case watch.Modified:
+				e.action = "modified"
+
+			default:
+				panic("unexpected event type " + event.Type)
+			}
+
+			var output []Entry
+			for dataKey, dataValue := range cm.Data {
+				log.Debugf("      dataKey: %s", dataKey)
+				var ent Entry
+
+				ent.data = string(dataValue)
+				ent.name = dataKey
+				output = append(output, ent)
+
+			}
+			e.entry = output
+			ev <- e
 
 		}
-		e.entry = output
-		ev <- e
-
 	}
 }
 func writeToSecret(clientset kubernetes.Clientset, ns string, name string, stringData map[string]string) {

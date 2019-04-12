@@ -20,6 +20,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -61,15 +62,22 @@ var (
 	log        = logrus.WithFields(logrus.Fields{"logger": "main"})
 	configFile = flag.String("config", "/config/sidecar.yaml", "The Snmptrapper configuration file")
 	debug      = flag.Bool("debug", false, "Set Log to debug level and print as text")
+
+	minWatchTimeout = 5 * time.Minute
 )
 
 func main() {
-	//logrus.SetLevel(logrus.InfoLevel)
-	logrus.SetLevel(logrus.DebugLevel)
-	logrus.SetFormatter(&logrus.TextFormatter{
-		DisableColors: true,
-		FullTimestamp: true,
-	})
+	if *debug {
+		// The TextFormatter is default, you don't actually have to do this.
+		logrus.SetFormatter(&logrus.TextFormatter{})
+		// Set the log-level:
+		logrus.SetLevel(logrus.DebugLevel)
+	} else {
+		// Log as JSON instead of the default ASCII formatter.
+		logrus.SetFormatter(&logrus.JSONFormatter{})
+		// Set the log-level:
+		logrus.SetLevel(logrus.InfoLevel)
+	}
 	log.Infof("Start  Version: %s, Commit %s, Branch %s,BuildDate %s", Version, Commit, Branch, BuildDate)
 	var tmpOut string
 	var lastOut string
@@ -115,9 +123,11 @@ func main() {
 		}
 		kind := sel[0]
 		labelSelector := sel[1]
+		timeoutSeconds := int64(minWatchTimeout.Seconds() * (rand.Float64() + 1.0))
 		listOptions := metav1.ListOptions{
-			LabelSelector: labelSelector,
-			Limit:         100,
+			LabelSelector:  labelSelector,
+			Limit:          100,
+			TimeoutSeconds: &timeoutSeconds,
 		}
 
 		fromNamespace := ""
@@ -141,8 +151,15 @@ func main() {
 		event, CMok := <-event
 		log.Debugln("Received ", event.cmid, CMok)
 		cmid := event.cmid
-		eMap[cmid] = event
 
+		if event.action == "added" {
+			_, present := eMap[cmid]
+			if present {
+				continue
+			}
+		}
+
+		eMap[cmid] = event
 		if conf.Template != "" {
 			tmpOut = validOutput(*conf, cmid, eMap)
 			if lastOut != tmpOut {
