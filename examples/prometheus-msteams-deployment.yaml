@@ -59,7 +59,7 @@ spec:
               cpu: 50m
               memory: 64Mi
         - name: prometheus-msteams-sc
-          image: "sysincz/sidecar:v0.2"
+          image: "sysincz/sidecar:v0.3"
 #          imagePullPolicy: IfNotPresent
           ports:
           - containerPort: 2112
