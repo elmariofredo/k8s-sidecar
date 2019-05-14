@@ -40,8 +40,8 @@ var funcs = template.FuncMap{
 		return timestamp
 	},
 	"indent": func(i int, s string) string {
-		r, _ := regexp.Compile("(^|\n)")
-		return r.ReplaceAllString(s, "\n"+strings.Repeat(" ", i))[1:]
+		r, _ := regexp.Compile("(?m)^")
+		return r.ReplaceAllString(s, strings.Repeat(" ", i))
 	},
 }
 
