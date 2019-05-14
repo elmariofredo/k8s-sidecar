@@ -67,6 +67,7 @@ var (
 )
 
 func main() {
+	flag.Parse()
 	if *debug {
 		// The TextFormatter is default, you don't actually have to do this.
 		logrus.SetFormatter(&logrus.TextFormatter{})
@@ -91,7 +92,7 @@ func main() {
 	} else {
 		kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
 	}
-	flag.Parse()
+
 	var conf *config.Config
 	log.Infof("Load config ... ")
 
@@ -287,6 +288,7 @@ func checkSyntax(myConfig config.Config, tmpOut string) bool {
 		log.Debug("checkSyntax - CheckYaml")
 		val := checkYaml(tmpOut)
 		if !val {
+			log.Debug(tmpOut)
 			return false
 		}
 	}
@@ -295,6 +297,7 @@ func checkSyntax(myConfig config.Config, tmpOut string) bool {
 		log.Debug("checkSyntax - CheckJSON")
 		val := checkJSON(tmpOut)
 		if !val {
+			log.Debug(tmpOut)
 			return false
 		}
 	}
