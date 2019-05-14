@@ -18,7 +18,7 @@ data:
       {{range $index, $element := .}}
       {{- if .team_connectors }}
         #{{$index}}
-        {{.team_connectors}}
+      {{.team_connectors|indent 2}}
       {{ end }}
       {{ end }}
     ToDirectory: /etc/config/
