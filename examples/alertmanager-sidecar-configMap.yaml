@@ -32,15 +32,15 @@ data:
       {{end }}
 
       {{range $index, $element := . }}
-      {{if index . "alertmanager.yaml.part1.99routes"}}
-      #{{$index}} alertmanager.yaml.part1.99routes
-      {{index . "alertmanager.yaml.part1.99routes"}}
-      {{ end }}
-      {{end }}
-      {{range $index, $element := . }}
       {{if index . "alertmanager-route"}}
       #{{$index}} alertmanager-route
       {{index . "alertmanager-route"| indent 2}}
+      {{ end }}
+      {{end }}
+      {{range $index, $element := . }}
+      {{if index . "alertmanager.yaml.part1.99routes"}}
+      #{{$index}} alertmanager.yaml.part1.99routes
+      {{index . "alertmanager.yaml.part1.99routes"}}
       {{ end }}
       {{end }}
 
