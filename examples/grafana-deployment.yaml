@@ -25,7 +25,7 @@ spec:
         runAsUser: 472
       containers:
       - name: grafana-sc-dashboard
-        image: "sysincz/sidecar:v0.3"
+        image: "sysincz/sidecar:v0.4"
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 2112

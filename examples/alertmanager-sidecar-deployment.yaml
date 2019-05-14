@@ -18,7 +18,7 @@ spec:
       serviceAccountName: alertmanager-sidecar
       containers:
       - name: alertmanager-sidecar
-        image: "sysincz/sidecar:v0.3"
+        image: "sysincz/sidecar:v0.4"
         ports:
         - containerPort: 2112
           name: metrics
